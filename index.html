@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>PIXEL CHAOS // PHYSICS SANDBOX v15</title>
+  <title>PIXEL CHAOS // PHYSICS SANDBOX v16</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -53,8 +53,8 @@
 <body>
   <div id="start-screen">
     <canvas id="logo-canvas" width="16" height="16"></canvas>
-    <div class="game-logo-title">PIXEL CHAOS<br>SANDBOX v15.0</div>
-    <div class="game-logo-sub">OPTIMIZED • EASY BREAKING • GROWING GRASS</div>
+    <div class="game-logo-title">PIXEL CHAOS<br>SANDBOX v16.0</div>
+    <div class="game-logo-sub">GROUNDED FIRE • SIMPLE LAVA • NO LAG</div>
     <button class="arcade-btn" id="btn-play-now">PRESS START</button>
   </div>
   <div id="map-screen" class="hidden">
@@ -75,7 +75,7 @@
           <button class="game-btn clear" id="btn-clear">CLR</button>
         </div>
       </div>
-      <div id="info-bar">Water + Mud = Growing Grass • Easy Breaking • Optimized</div>
+      <div id="info-bar">Fire settles on ground & burns • Lava flows slow • No lag!</div>
     </div>
     <div id="dock-box">
       <div id="category-bar"></div>
@@ -242,7 +242,7 @@ const ITEMS = [
   {id:"water",cat:"fluids",name:"WATER",isParticle:true,density:1.0,viscosity:0.9,heatCapacity:4.2},
   {id:"sand",cat:"fluids",name:"SAND",isParticle:true,density:1.6,viscosity:2.5,heatCapacity:0.8,abrasive:true},
   {id:"lava",cat:"fluids",name:"LAVA",isParticle:true,density:3.2,viscosity:8.0,heatCapacity:1.2,heat:3.2},
-  {id:"fire",cat:"fluids",name:"FIRE",isParticle:true,density:0.2,viscosity:0.3,heatCapacity:0.5,gas:true,heat:2.5,fire:true},
+  {id:"fire",cat:"fluids",name:"FIRE",isParticle:true,density:1.5,viscosity:0.5,heatCapacity:0.5,heat:2.5,fire:true},
   {id:"acid",cat:"fluids",name:"ACID",isParticle:true,density:1.15,viscosity:1.1,heatCapacity:2.5,corrosive:1.2},
   {id:"slime",cat:"fluids",name:"SLIME",isParticle:true,density:1.35,viscosity:4.5,heatCapacity:2.0,sticky:true},
   {id:"oil",cat:"fluids",name:"OIL",isParticle:true,density:0.82,viscosity:2.8,heatCapacity:1.8,flammable:true,fuel:true},
@@ -344,7 +344,7 @@ function spawnItem(def,x,y){
         heatSensitive:def.heatSensitive||0, gas:def.gas||false, sticky:def.sticky||false,
         freeze:def.freeze||false, abrasive:def.abrasive||false, conductive:def.conductive||false,
         fuel:def.fuel||false, fire:def.fire||false, temp:def.heat?200+def.heat*40:(def.freeze?-40:20),
-        grounded:false, growSize:2, flicker:Math.random()*Math.PI*2
+        grounded:false, growSize:2, flicker:Math.random()*Math.PI*2, isFlame:false
       });
     }
     return;
@@ -398,7 +398,7 @@ function detonate(bomb){
     const dx=(o.x+o.w/2)-cx, dy=(o.y+o.h/2)-cy, d=Math.hypot(dx,dy)||1, r=220*pwr;
     if(d<r){ const force=((r-d)/r)*30*pwr/Math.sqrt(o.mass||1); o.vx+=(dx/d)*force; o.vy+=(dy/d)*force-7*pwr; o.av+=(Math.random()-0.5)*0.5*pwr; o.temp+=40*pwr*(1-d/r); if(o.flammable)o.burning=true; if(o.fragile&&d<r*0.4)o.health-=90*pwr; if((o.explosive||o.mine)&&d<r*0.5)o.age=(o.timer||50)-2; }
   });
-  for(let i=0;i<60*pwr;i++){ const a=Math.random()*Math.PI*2,s=3+Math.random()*15*pwr; particles.push({type:Math.random()>0.3?"fire":"spark",x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:18+Math.random()*28,density:0.25,temp:400,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); }
+  for(let i=0;i<60*pwr;i++){ const a=Math.random()*Math.PI*2,s=3+Math.random()*15*pwr; particles.push({type:Math.random()>0.3?"fire":"spark",x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:18+Math.random()*28,density:0.25,temp:400,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2,isFlame:false}); }
 }
 
 function stepPhysics(){
@@ -443,8 +443,8 @@ function stepPhysics(){
     }
 
     if(b.active&&!b.frozen){
-      if(b.thruster){ b.vy-=b.thrust; b.temp+=0.4; if(Math.random()<0.55)particles.push({type:"fire",x:b.x+b.w/2+(Math.random()-0.5)*8,y:b.y+b.h+3,vx:(Math.random()-0.5)*1.6,vy:2.8+Math.random()*2,life:13,temp:350,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); }
-      if(b.jetpack){ b.vy-=b.thrust; b.vx+=(Math.random()-0.5)*0.12; b.temp+=0.3; if(Math.random()<0.4)particles.push({type:"fire",x:b.x+b.w/2+(Math.random()-0.5)*6,y:b.y+b.h+2,vx:(Math.random()-0.5)*1.1,vy:2+Math.random()*1.8,life:11,temp:300,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); }
+      if(b.thruster){ b.vy-=b.thrust; b.temp+=0.4; }
+      if(b.jetpack){ b.vy-=b.thrust; b.vx+=(Math.random()-0.5)*0.12; b.temp+=0.3; }
       if(b.propeller){ b.vy-=b.thrust; b.av+=0.22; }
       if(b.spinner||b.saw)b.av+=b.saw?0.35:0.2;
       if(b.gyro){ b.av*=0.92; b.vx*=0.995; }
@@ -454,10 +454,10 @@ function stepPhysics(){
       if(b.conveyor){ bodies.forEach(o=>{ if(o===b)return; const ox=Math.min(b.x+b.w,o.x+o.w)-Math.max(b.x,o.x); const oy=Math.min(b.y+b.h,o.y+o.h)-Math.max(b.y,o.y); if(ox>0&&oy>0&&oy<ox)o.vx+=b.beltSpeed; }); }
       if(b.magnetic){ bodies.forEach(o=>{ if(o===b||!o.metal)return; const dx=(b.x+b.w/2)-(o.x+o.w/2),dy=(b.y+b.h/2)-(o.y+o.h/2),d=Math.hypot(dx,dy)||1; if(d<160){ const f=b.field*2.0/(d*0.07); o.vx+=(dx/d)*f; o.vy+=(dy/d)*f; } }); }
       if(b.blackhole){ bodies.forEach(o=>{ if(o===b)return; const dx=(b.x+b.w/2)-(o.x+o.w/2),dy=(b.y+b.h/2)-(o.y+o.h/2),d=Math.hypot(dx,dy)||1; if(d<220){ const f=b.field*5.5/(d*0.035); o.vx+=(dx/d)*f; o.vy+=(dy/d)*f; if(d<32){o.health-=10;o.temp+=5;} } }); particles.forEach(p=>{ const dx=(b.x+b.w/2)-p.x,dy=(b.y+b.h/2)-p.y,d=Math.hypot(dx,dy)||1; if(d<200){p.vx+=(dx/d)*2.6;p.vy+=(dy/d)*2.6;} }); }
-      if(b.missile){ b.vy-=0.32; if(b.age>35){ let nearest=null,nd=9999; bodies.forEach(o=>{ if(o===b)return; const d=Math.hypot(o.x-b.x,o.y-b.y); if(d<nd){nd=d;nearest=o;} }); if(nearest&&nd<220){ const dx=(nearest.x+nearest.w/2)-(b.x+b.w/2),dy=(nearest.y+nearest.h/2)-(b.y+b.h/2),d=Math.hypot(dx,dy)||1; b.vx+=(dx/d)*0.45; b.vy+=(dy/d)*0.45; } } if(Math.random()<0.38)particles.push({type:"fire",x:b.x+b.w/2,y:b.y+b.h,vx:(Math.random()-0.5)*0.9,vy:2.2,life:10,temp:280,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); }
-      if(b.laser&&frame%3===0){ for(let k=0;k<4;k++)particles.push({type:"spark",x:b.x+b.w/2+(Math.random()-0.5)*5,y:b.y+b.h,vx:(Math.random()-0.5)*0.4,vy:9+Math.random()*5,life:16,laser:true,temp:600,density:0.2,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); }
-      if(b.tesla&&frame%5===0){ bodies.forEach(o=>{ if(o===b||!o.metal)return; const dx=(o.x+o.w/2)-(b.x+b.w/2),dy=(o.y+o.h/2)-(b.y+b.h/2),d=Math.hypot(dx,dy); if(d<110){ o.charged=20; o.temp+=8; o.health-=1.5; for(let k=0;k<3;k++)particles.push({type:"spark",x:b.x+b.w/2,y:b.y+b.h/2,vx:dx/d*(3+Math.random()*4),vy:dy/d*(3+Math.random()*4),life:10,temp:500,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); } }); }
-      if(b.emp&&b.age===30){ bodies.forEach(o=>{ if(o===b)return; const d=Math.hypot(o.x-b.x,o.y-b.y); if(d<180){ o.charged=-40; if(o.thruster||o.jetpack||o.laser||o.tesla||o.missile){ o.active=false; setTimeout(()=>{if(bodies.includes(o))o.active=true;},3000); } } }); for(let k=0;k<30;k++){ const a=Math.random()*Math.PI*2; particles.push({type:"spark",x:b.x+b.w/2,y:b.y+b.h/2,vx:Math.cos(a)*8,vy:Math.sin(a)*8,life:15,temp:200,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); } }
+      if(b.missile){ b.vy-=0.32; if(b.age>35){ let nearest=null,nd=9999; bodies.forEach(o=>{ if(o===b)return; const d=Math.hypot(o.x-b.x,o.y-b.y); if(d<nd){nd=d;nearest=o;} }); if(nearest&&nd<220){ const dx=(nearest.x+nearest.w/2)-(b.x+b.w/2),dy=(nearest.y+nearest.h/2)-(b.y+b.h/2),d=Math.hypot(dx,dy)||1; b.vx+=(dx/d)*0.45; b.vy+=(dy/d)*0.45; } } }
+      if(b.laser&&frame%3===0){ for(let k=0;k<4;k++)particles.push({type:"spark",x:b.x+b.w/2+(Math.random()-0.5)*5,y:b.y+b.h,vx:(Math.random()-0.5)*0.4,vy:9+Math.random()*5,life:16,laser:true,temp:600,density:0.2,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2,isFlame:false}); }
+      if(b.tesla&&frame%5===0){ bodies.forEach(o=>{ if(o===b||!o.metal)return; const dx=(o.x+o.w/2)-(b.x+b.w/2),dy=(o.y+o.h/2)-(b.y+b.h/2),d=Math.hypot(dx,dy); if(d<110){ o.charged=20; o.temp+=8; o.health-=1.5; for(let k=0;k<3;k++)particles.push({type:"spark",x:b.x+b.w/2,y:b.y+b.h/2,vx:dx/d*(3+Math.random()*4),vy:dy/d*(3+Math.random()*4),life:10,temp:500,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2,isFlame:false}); } }); }
+      if(b.emp&&b.age===30){ bodies.forEach(o=>{ if(o===b)return; const d=Math.hypot(o.x-b.x,o.y-b.y); if(d<180){ o.charged=-40; if(o.thruster||o.jetpack||o.laser||o.tesla||o.missile){ o.active=false; setTimeout(()=>{if(bodies.includes(o))o.active=true;},3000); } } }); for(let k=0;k<30;k++){ const a=Math.random()*Math.PI*2; particles.push({type:"spark",x:b.x+b.w/2,y:b.y+b.h/2,vx:Math.cos(a)*8,vy:Math.sin(a)*8,life:15,temp:200,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2,isFlame:false}); } }
       if(b.portal&&portals.length===2){ const other=portals[0]===b?portals[1]:portals[0]; bodies.forEach(o=>{ if(o===b||o===other||o.portal)return; const dx=Math.abs((o.x+o.w/2)-(b.x+b.w/2)),dy=Math.abs((o.y+o.h/2)-(b.y+b.h/2)); if(dx<18&&dy<18&&o.age>15){ o.x=other.x+(Math.random()-0.5)*10; o.y=other.y+(Math.random()-0.5)*10; o.vx*=1.1; o.vy*=1.1; o.age=0; } }); }
       if(b.explosive&&b.age>=b.timer){ detonate(b); continue; }
     }
@@ -467,13 +467,11 @@ function stepPhysics(){
       const excess = b.load - maxLoad;
       b.health -= excess * 3.0;
       if (b.load > maxLoad * 2.5) b.health = 0;
-      if(Math.random() < 0.5) particles.push({type:"spark", x:b.x+Math.random()*b.w, y:b.y+Math.random()*b.h, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:15, temp:100, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2});
+      if(Math.random() < 0.5) particles.push({type:"spark", x:b.x+Math.random()*b.w, y:b.y+Math.random()*b.h, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:15, temp:100, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2, isFlame:false});
     }
 
     if(b.burning){
       b.temp += 3.5; b.health -= 2.0;
-      if(Math.random() < 0.7) particles.push({type:"fire", x:b.x+Math.random()*b.w, y:b.y+Math.random()*b.h, vx:(Math.random()-0.5)*0.5, vy:-0.5-Math.random()*0.5, life:25+Math.random()*15, temp:400, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2});
-      if(Math.random() < 0.4) particles.push({type:"smoke", x:b.x+Math.random()*b.w, y:b.y, vx:(Math.random()-0.5)*0.3, vy:-0.8-Math.random()*0.5, life:50+Math.random()*30, temp:100, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2});
       if(b.human && !b.isSkeleton && b.health < b.maxHealth * 0.5) b.isSkeleton = true;
     }
 
@@ -492,7 +490,7 @@ function stepPhysics(){
           vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4 - 1, 
           life:50+Math.random()*30, 
           density: pType==="water"?1.0:(pType==="lava"?3.2:1.5), 
-          temp:b.temp, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2
+          temp:b.temp, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2, isFlame:false
         });
       }
       bodies.splice(i,1); 
@@ -522,7 +520,7 @@ function stepPhysics(){
     const strength = (upperObj.hardness * 4.0) + 2.0;
     if(tension > strength) {
       links.splice(i,1);
-      for(let k=0; k<10; k++) particles.push({type:"spark", x: upperObj.x+upperObj.w/2, y: upperObj.y+upperObj.h, vx:(Math.random()-0.5)*6, vy:(Math.random()-0.5)*6, life:20, temp:100, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2});
+      for(let k=0; k<10; k++) particles.push({type:"spark", x: upperObj.x+upperObj.w/2, y: upperObj.y+upperObj.h, vx:(Math.random()-0.5)*6, vy:(Math.random()-0.5)*6, life:20, temp:100, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2, isFlame:false});
       continue;
     }
     if(Math.abs(diff)>1){
@@ -608,21 +606,67 @@ function stepPhysics(){
       continue;
     }
 
-    if(p.type === "fire"){
-      if(!p.grounded){
-        p.vy -= 0.25;
-        p.vx *= 0.85;
-        p.vx += Math.sin(p.flicker) * 0.3;
-        if(currentMap.floor && p.y > floorY - 10){
-          p.grounded = true;
-          p.y = floorY - 10;
-        }
-      } else {
-        p.vx = Math.sin(p.flicker) * 0.5;
-        p.vy = -0.3 - Math.abs(Math.sin(p.flicker * 1.5)) * 0.4;
-      }
+    // FLAME particles (visual only, rise up from fire base)
+    if(p.isFlame){
+      p.vy -= 0.3; // rise
+      p.vx += Math.sin(p.flicker) * 0.4; // flicker
+      p.vx *= 0.9;
       p.x += p.vx;
       p.y += p.vy;
+      continue;
+    }
+
+    // FIRE: Falls with gravity, settles on ground, then damages things
+    if(p.type === "fire"){
+      if(!p.grounded){
+        // Fire falls like a regular particle until it hits ground
+        p.vy += currentMap.gravity * 0.8 * (p.density||1) * 0.6;
+        p.vx *= 0.95;
+        p.x += p.vx;
+        p.y += p.vy;
+        
+        // Settle on floor
+        if(currentMap.floor && p.y > floorY - 4){
+          p.grounded = true;
+          p.y = floorY - 4;
+          p.vx = 0;
+          p.vy = 0;
+        }
+        // Settle on body
+        for(const b of bodies){
+          if(p.x>b.x && p.x<b.x+b.w && p.y>b.y-3 && p.y<b.y+b.h){
+            p.grounded = true;
+            p.y = b.y - 3;
+            p.vx = 0;
+            p.vy = 0;
+            break;
+          }
+        }
+      } else {
+        // Grounded fire: stays in place, flickers slightly, damages bodies
+        p.vx = Math.sin(p.flicker) * 0.1;
+        p.x += p.vx;
+        
+        // Spawn flame particles that rise up (visual only)
+        if(frame % 3 === 0 && Math.random() < 0.5){
+          particles.push({
+            type:"fire", x:p.x+(Math.random()-0.5)*3, y:p.y-1,
+            vx:(Math.random()-0.5)*0.5, vy:-0.5-Math.random()*0.5,
+            life:12+Math.random()*8, density:0.1, temp:400,
+            grounded:false, growSize:2, flicker:Math.random()*Math.PI*2,
+            isFlame:true
+          });
+        }
+        
+        // Damage bodies touching the grounded fire
+        for(const b of bodies){
+          if(p.x>b.x-2 && p.x<b.x+b.w+2 && p.y>b.y-4 && p.y<b.y+b.h){
+            if(b.flammable && !b.burning && b.temp > 40) b.burning = true;
+            b.temp += 2.0;
+            b.health -= 1.5;
+          }
+        }
+      }
       continue;
     }
 
@@ -639,10 +683,10 @@ function stepPhysics(){
           const dx = p.x - q.x, dy = p.y - q.y;
           if(dx*dx + dy*dy < 100){
             if(Math.random() < 0.4){
-              particles.push({type:"grass", x:p.x, y:p.y, vx:0, vy:0.5, life:300+Math.random()*200, density:0.5, temp:20, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2});
+              particles.push({type:"grass", x:p.x, y:p.y, vx:0, vy:0.5, life:300+Math.random()*200, density:0.5, temp:20, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2, isFlame:false});
             }
             if(Math.random() < 0.15){
-              particles.push({type:"leaf", x:q.x, y:q.y, vx:0, vy:0.5, life:400+Math.random()*200, density:0.4, temp:20, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2});
+              particles.push({type:"leaf", x:q.x, y:q.y, vx:0, vy:0.5, life:400+Math.random()*200, density:0.4, temp:20, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2, isFlame:false});
             }
             break;
           }
@@ -675,17 +719,14 @@ function stepPhysics(){
       }
     }
     
+    // LAVA: Simple slow flow, NO fire particles spawned (no lag!)
     if(p.type==="lava"){
-      p.vx *= 0.85;
-      p.vy *= 0.85;
-      p.vx += (Math.random()-0.5) * 0.3;
+      p.vx *= 0.88;
+      p.vy *= 0.88;
+      p.vx += (Math.random()-0.5) * 0.2;
       p.vy += currentMap.gravity * 0.3;
-      if(Math.random() < 0.015 && !p.grounded){
-        particles.push({type:"lava", x:p.x, y:p.y+4, vx:(Math.random()-0.5)*0.3, vy:1.5+Math.random(), life:80+Math.random()*40, density:3.2, viscosity:8.0, temp:1200, grounded:false, growSize:3, flicker:Math.random()*Math.PI*2});
-      }
-      if(Math.random()<0.05)particles.push({type:"fire",x:p.x,y:p.y-2,vx:(Math.random()-0.5)*0.3,vy:-0.5-Math.random()*0.3,life:20,temp:500,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2});
     }
-    else if(p.type==="plasma"){ p.vx+=(Math.random()-0.5)*2.8; p.vy+=(Math.random()-0.5)*2.2; if(Math.random()<0.22)particles.push({type:"spark",x:p.x,y:p.y,vx:(Math.random()-0.5)*3.5,vy:(Math.random()-0.5)*3.5,life:11,temp:700,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); }
+    else if(p.type==="plasma"){ p.vx+=(Math.random()-0.5)*2.8; p.vy+=(Math.random()-0.5)*2.2; if(Math.random()<0.22)particles.push({type:"spark",x:p.x,y:p.y,vx:(Math.random()-0.5)*3.5,vy:(Math.random()-0.5)*3.5,life:11,temp:700,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2,isFlame:false}); }
     else if(p.type==="cryo"){ p.vy+=currentMap.gravity*0.7; p.vx*=0.97; }
     else if(p.type!=="ash"){ p.vy+=currentMap.gravity*0.8*(p.density||1)*0.6; }
     
@@ -699,18 +740,12 @@ function stepPhysics(){
       if(p.x>b.x && p.x<b.x+b.w && p.y>b.y && p.y<b.y+b.h){
         if(p.heat||p.temp){ const pTemp=p.temp||(p.heat?200+p.heat*50:20); const flow=(pTemp-b.temp)*0.06*(b.conductivity||0.5); b.temp+=flow/(b.thermalMass||1.5); }
         
+        // LAVA: Simple damage, no fire spawning
         if(p.type==="lava"){ 
           b.inLava = true;
           if(b.flammable) b.burning=true; 
           b.temp+=2.8; 
           b.health -= 1.5;
-          if(Math.random() < 0.2) particles.push({type:"fire", x:b.x+Math.random()*b.w, y:b.y+Math.random()*b.h, vx:(Math.random()-0.5)*0.5, vy:-0.8-Math.random()*0.5, life:20, temp:400, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2});
-        }
-        
-        if(p.type==="fire"){
-          if(b.flammable && !b.burning && b.temp > 50) b.burning = true;
-          b.temp += 1.5;
-          b.health -= 1.0;
         }
         
         if(p.freeze||p.type==="cryo"){ b.temp-=3.5; if(b.temp<-10)b.frozen=true; }
@@ -722,11 +757,11 @@ function stepPhysics(){
         }
         if(p.corrosive){
           b.health -= p.corrosive * 0.85;
-          if(Math.random() < 0.3) particles.push({type:"smoke", x:p.x, y:p.y, vx:(Math.random()-0.5), vy:-1, life:30, temp:50, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2});
+          if(Math.random() < 0.3) particles.push({type:"smoke", x:p.x, y:p.y, vx:(Math.random()-0.5), vy:-1, life:30, temp:50, grounded:false, growSize:2, flicker:Math.random()*Math.PI*2, isFlame:false});
         }
         if(p.abrasive) b.health -= 0.15;
         if(p.sticky){ b.vx*=0.92; b.vy*=0.92; b.av*=0.9; }
-        if(p.fuel && b.burning){ for(let k=0;k<5;k++)particles.push({type:"fire",x:p.x+(Math.random()-0.5)*12,y:p.y,vx:(Math.random()-0.5)*0.8,vy:-1-Math.random()*0.5,life:22,temp:350,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2}); }
+        if(p.fuel && b.burning){ for(let k=0;k<5;k++)particles.push({type:"fire",x:p.x+(Math.random()-0.5)*12,y:p.y,vx:(Math.random()-0.5)*0.8,vy:-1-Math.random()*0.5,life:22,temp:350,grounded:false,growSize:2,flicker:Math.random()*Math.PI*2,isFlame:false}); }
         if(p.explosiveFluid && b.temp>(p.heatSensitive||70)){ detonate({x:p.x-12,y:p.y-12,w:24,h:24,power:1.15}); particles.splice(i,1); break; }
         if((p.density||1)>1.3){ b.vx*=0.96; b.vy*=0.96; }
         if(p.conductive && b.metal) b.charged = Math.min(30, (b.charged||0)+4);
@@ -794,8 +829,15 @@ function renderArena(){
       return;
     }
     if(p.type === "fire"){
-      color = Math.sin(p.flicker || 0) > 0 ? "#fbbf24" : "#f97316";
-      sz = 5;
+      if(p.isFlame){
+        // Flame particles: smaller, fade out
+        color = Math.sin(p.flicker || 0) > 0 ? "#fbbf24" : "#f97316";
+        sz = 3;
+      } else {
+        // Grounded/base fire: bigger, solid
+        color = Math.sin(p.flicker || 0) > 0 ? "#f97316" : "#ef4444";
+        sz = 5;
+      }
     }
     else if(p.type==="water")color="#38bdf8";
     else if(p.type==="sand")color="#f59e0b";
